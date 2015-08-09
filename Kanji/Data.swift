@@ -37,7 +37,7 @@ struct Data{
         
         kanjiData += dataBlobOne
     }
-    
+    //"borrowed" from http://nihongoichiban.com/2011/04/10/complete-list-of-kanji-for-jlpt-n5/
     static var dataBlobOne = [KanjiData(kanji:"安",kunyomi:"yasu(i)", onyomi:"AN", translations: ["peace"," cheap"," safety"],similarKanji:nil, parts:nil),
         KanjiData(kanji:"一",kunyomi:"hito(tsu), hito-", onyomi:"ICHI, ITSU", translations: ["one"],similarKanji:nil, parts:nil),
         KanjiData(kanji:"飲",kunyomi:"no(mu)", onyomi:"IN", translations: ["to drink"],similarKanji:nil, parts:nil),
