@@ -8,7 +8,7 @@
 
 import UIKit
 
-class KanjiListViewController: UIViewController, UITableViewDataSource, UISearchResultsUpdating, UITableViewDelegate, UISearchBarDelegate{
+class KanjiListViewController: UIViewController, UITableViewDataSource, UISearchResultsUpdating, UITableViewDelegate, UISearchBarDelegate, UIGestureRecognizerDelegate{
 
     @IBOutlet weak var tableView: UITableView!
     var searchController = UISearchController()
@@ -46,6 +46,7 @@ class KanjiListViewController: UIViewController, UITableViewDataSource, UISearch
         
         var tapRecognizer = UITapGestureRecognizer(target: self, action: "viewTapped:")
         view.addGestureRecognizer(tapRecognizer)
+        tapRecognizer.delegate = self
         
         tableView.reloadData()
     }
@@ -169,5 +170,21 @@ class KanjiListViewController: UIViewController, UITableViewDataSource, UISearch
     
     func searchBarTextDidEndEditing(searchBar: UISearchBar) {
         startAnimation()
+    }
+    
+//MARK; UIGestureRecognizer
+    func gestureRecognizer(gestureRecognizer: UIGestureRecognizer, shouldReceiveTouch touch: UITouch) -> Bool {
+        if(touch.view is UITableViewCell) {
+            return false
+        }
+        // UITableViewCellContentView => UITableViewCell
+        if(touch.view.superview is UITableViewCell) {
+            return false
+        }
+        // UITableViewCellContentView => UITableViewCellScrollView => UITableViewCell
+        if(touch.view.superview?.superview is UITableViewCell) {
+            return false;
+        }
+        return true;
     }
 }
