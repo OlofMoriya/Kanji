@@ -15,7 +15,7 @@ class KanjiListViewController: UIViewController, UITableViewDataSource, UISearch
     
     let tableData = Data.kanjiData
     var filteredTableData:[KanjiData] = []
-    var floatingButtons:[UILabel:KanjiData] = [:]
+    var floatingLabels:[UILabel:KanjiData] = [:]
     
     let kanjiListCellIdentifier = "KanjiListCell"
     
@@ -59,7 +59,7 @@ class KanjiListViewController: UIViewController, UITableViewDataSource, UISearch
     }
     
     override func viewDidDisappear(animated: Bool) {
-        floatingButtons = [:]
+        floatingLabels = [:]
     }
     
     func startAnimation(){
@@ -69,7 +69,7 @@ class KanjiListViewController: UIViewController, UITableViewDataSource, UISearch
         let label = UILabel()
         label.textColor = Colors.mainColor
         label.text = kanjiData.kanji
-        floatingButtons[label] = kanjiData
+        floatingLabels[label] = kanjiData
         
         var randomY = CGFloat(arc4random_uniform(UInt32(UIScreen.mainScreen().bounds.height - 150)))
 
@@ -84,7 +84,7 @@ class KanjiListViewController: UIViewController, UITableViewDataSource, UISearch
 
         }, completion: { (completed) -> Void in
             label.removeFromSuperview()
-            self.floatingButtons[label] = nil
+            self.floatingLabels[label] = nil
             if completed{
                 self.startAnimation()
             }
@@ -92,7 +92,7 @@ class KanjiListViewController: UIViewController, UITableViewDataSource, UISearch
     }
     
     func viewTapped(recognizer : UIRotationGestureRecognizer){
-        for (label, kanjiData) in floatingButtons{
+        for (label, kanjiData) in floatingLabels{
             var layer = (label.layer.presentationLayer() as! CALayer)
             if layer.hitTest(recognizer.locationInView(view)) != nil{
                 pushDetails(kanjiData)
@@ -162,10 +162,10 @@ class KanjiListViewController: UIViewController, UITableViewDataSource, UISearch
     
 //MARK: UISearchBarDelegate
     func searchBarTextDidBeginEditing(searchBar: UISearchBar) {
-        for floatingLabel in floatingButtons{
+        for floatingLabel in floatingLabels{
             floatingLabel.0.hidden = true
         }
-        floatingButtons = [:]
+        floatingLabels = [:]
     }
     
     func searchBarTextDidEndEditing(searchBar: UISearchBar) {
