@@ -53,6 +53,10 @@ class KanjiListViewController: UIViewController, UITableViewDataSource, UISearch
     
     override func viewDidAppear(animated: Bool) {
         super.viewDidAppear(animated)
+        startAnimations()
+    }
+    
+    func startAnimations(){
         for i in 1...8{
             startAnimation()
         }
@@ -163,13 +167,13 @@ class KanjiListViewController: UIViewController, UITableViewDataSource, UISearch
 //MARK: UISearchBarDelegate
     func searchBarTextDidBeginEditing(searchBar: UISearchBar) {
         for floatingLabel in floatingLabels{
-            floatingLabel.0.hidden = true
+            floatingLabel.0.removeFromSuperview()
         }
         floatingLabels = [:]
     }
     
     func searchBarTextDidEndEditing(searchBar: UISearchBar) {
-        startAnimation()
+        startAnimations()
     }
     
 //MARK; UIGestureRecognizer
