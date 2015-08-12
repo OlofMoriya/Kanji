@@ -20,10 +20,10 @@ class KanjiDetailsViewController: UIViewController, UITableViewDataSource, UITab
     var kanjiData: Kanji!
     
     @IBOutlet weak var tableView: UITableView!
-    let sectionOneCellIdentifier = "cellOne"
-    let sectionTwoCellIdentifier = "cellTwo"
-    let sectionThreeCellIdentifier = "cellTwo"
-    let sectionFourCellIdentifier = "cellTwo"
+    let sectionOneCellIdentifier = "coldFactsCell"
+    let sectionTwoCellIdentifier = "subtitledCell"
+    let sectionThreeCellIdentifier = "subtitledCell"
+    let sectionFourCellIdentifier = "subtitledCell"
     
     var structure:[Int: (cellIdentifier: String, numberOfCells:Int, headerTitle:KanjiDetailsSectionTitles)] = [:]
     
