@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import CoreData
 
 enum KanjiDetailsSectionTitles: String{
     case Header = "Header"
@@ -16,7 +17,7 @@ enum KanjiDetailsSectionTitles: String{
 }
 
 class KanjiDetailsViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
-    var kanjiData: KanjiData!
+    var kanjiData: Kanji!
     
     @IBOutlet weak var tableView: UITableView!
     let sectionOneCellIdentifier = "cellOne"
@@ -26,6 +27,7 @@ class KanjiDetailsViewController: UIViewController, UITableViewDataSource, UITab
     
     var structure:[Int: (cellIdentifier: String, numberOfCells:Int, headerTitle:KanjiDetailsSectionTitles)] = [:]
     
+    let managedObjectContext = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -39,11 +41,11 @@ class KanjiDetailsViewController: UIViewController, UITableViewDataSource, UITab
         
         structure = [0: (sectionOneCellIdentifier, 3, KanjiDetailsSectionTitles.Header), 1: (sectionTwoCellIdentifier, kanjiData.translations.count, KanjiDetailsSectionTitles.Translation)]
         
-        if let parts = kanjiData.parts where parts.count > 0{
+        if let parts = kanjiData.parts as? [String] where parts.count > 0{
             structure[structure.count] = (sectionThreeCellIdentifier, parts.count ?? 0, KanjiDetailsSectionTitles.Parts)
         }
         
-        if let similar = kanjiData.similarKanji where similar.count > 0{
+        if let similar = kanjiData.similarKanji as? [String] where similar.count > 0{
             structure[structure.count] = (sectionFourCellIdentifier, similar.count ?? 0, KanjiDetailsSectionTitles.Similar)
         }
     }
@@ -91,7 +93,10 @@ class KanjiDetailsViewController: UIViewController, UITableViewDataSource, UITab
                 cell = UITableViewCell(style: UITableViewCellStyle.Default, reuseIdentifier: sectionTwoCellIdentifier)
             }
             
-            cell?.textLabel?.text = kanjiData.translations[indexPath.row]
+            if let translations = kanjiData.translations as? [String]{
+                cell?.textLabel?.text = translations[indexPath.row]
+            }
+            
             
             return cell!
         }else if structure[indexPath.section]!.headerTitle == KanjiDetailsSectionTitles.Parts{
@@ -100,7 +105,9 @@ class KanjiDetailsViewController: UIViewController, UITableViewDataSource, UITab
                 cell = UITableViewCell(style: UITableViewCellStyle.Default, reuseIdentifier: sectionTwoCellIdentifier)
             }
             
-            cell?.textLabel?.text = kanjiData.parts?[indexPath.row]
+            if let parts = kanjiData.parts as? [String]{
+                cell?.textLabel?.text = parts[indexPath.row]
+            }
             
             return cell!
         }else if structure[indexPath.section]!.headerTitle == KanjiDetailsSectionTitles.Similar{
@@ -109,7 +116,9 @@ class KanjiDetailsViewController: UIViewController, UITableViewDataSource, UITab
                 cell = UITableViewCell(style: UITableViewCellStyle.Default, reuseIdentifier: sectionFourCellIdentifier)
             }
             
-            cell?.textLabel?.text = kanjiData.similarKanji?[indexPath.row]
+            if let similar = kanjiData.similarKanji as? [String]{
+                cell?.textLabel?.text = similar[indexPath.row]
+            }
             
             return cell!
         }
@@ -153,16 +162,28 @@ class KanjiDetailsViewController: UIViewController, UITableViewDataSource, UITab
 
         var kanjiData: String?
         if structure[indexPath.section]!.headerTitle == KanjiDetailsSectionTitles.Similar{
-            kanjiData = self.kanjiData.similarKanji![indexPath.row]
+            kanjiData = (self.kanjiData.similarKanji as! [String])[indexPath.row]
         }else if structure[indexPath.section]!.headerTitle == KanjiDetailsSectionTitles.Parts{
-            kanjiData = self.kanjiData.parts![indexPath.row]
+            kanjiData = (self.kanjiData.parts as! [String])[indexPath.row]
         }
         
         if let kanjiData = kanjiData{
-            let searchPredicate = NSPredicate(format: "(kanji = %@) ", kanjiData)
-            if let array = (Data.kanjiData as NSArray).filteredArrayUsingPredicate(searchPredicate) as? [KanjiData] where array.count > 0{
+            let entityDescription = NSEntityDescription.entityForName("Kanji", inManagedObjectContext: managedObjectContext!)
+            
+            let request = NSFetchRequest()
+            request.entity = entityDescription
+            
+            let pred = NSPredicate(format: "(kanji = %@)", kanjiData)
+            request.predicate = pred
+            request.fetchLimit = 1
+            
+            var error: NSError?
+            
+            var objects = managedObjectContext?.executeFetchRequest(request, error: &error)
+            
+            if let array = objects as? [Kanji] where array.count > 0{
                 let detailsViewController = KanjiDetailsViewController(nibName: "KanjiDetailsViewController", bundle:nil)
-                detailsViewController.kanjiData = array[0] as KanjiData
+                detailsViewController.kanjiData = array[0]
                 navigationController?.pushViewController(detailsViewController, animated: true)
             }
         }

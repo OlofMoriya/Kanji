@@ -19,7 +19,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Override point for customization after application launch.
         window = UIWindow(frame: UIScreen.mainScreen().bounds)
         
-        Data.loadBaseKanji()
         Style.setAppStyle()
         
         var kanjiListViewController = KanjiListViewController(nibName: "KanjiListViewController", bundle: nil)
@@ -27,6 +26,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         var navigationController = UINavigationController(rootViewController: kanjiListViewController)
         window?.rootViewController = navigationController
         window?.makeKeyAndVisible()
+        
+        if !DataReader.kanjiIsLoaded{
+            var loadingViewController = LoadingViewController(nibName: "LoadingViewController", bundle: nil)
+            navigationController.presentViewController(loadingViewController, animated: false, completion: { () -> Void in
+                
+            })
+            
+        }
         
         return true
     }

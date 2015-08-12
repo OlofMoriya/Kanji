@@ -7,17 +7,19 @@
 //
 
 import UIKit
+import CoreData
 
 class KanjiListViewController: UIViewController, UITableViewDataSource, UISearchResultsUpdating, UITableViewDelegate, UISearchBarDelegate, UIGestureRecognizerDelegate{
 
     @IBOutlet weak var tableView: UITableView!
     var searchController = UISearchController()
     
-    let tableData = Data.kanjiData
-    var filteredTableData:[KanjiData] = []
-    var floatingLabels:[UILabel:KanjiData] = [:]
+    var animatedKanji: [Kanji] = []
+    var filteredTableData:[Kanji] = []
+    var floatingLabels:[UILabel:Kanji] = [:]
     
     let kanjiListCellIdentifier = "KanjiListCell"
+    let managedObjectContext = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -51,12 +53,35 @@ class KanjiListViewController: UIViewController, UITableViewDataSource, UISearch
         tableView.reloadData()
     }
     
-    override func viewDidAppear(animated: Bool) {
-        super.viewDidAppear(animated)
+    override func viewWillAppear(animated: Bool) {
+        super.viewWillAppear(animated)        
+        loadAnimatedKanji()
+    }
+    
+    func loadAnimatedKanji(){
+        let entityDescription = NSEntityDescription.entityForName("Kanji", inManagedObjectContext: managedObjectContext!)
+        
+        let request = NSFetchRequest()
+        request.entity = entityDescription
+        
+        request.fetchLimit = 100
+        
+        var error: NSError?
+        var objects = managedObjectContext?.executeFetchRequest(request,
+            error: &error)
+
+        animatedKanji = objects as! [Kanji]
         startAnimations()
     }
     
     func startAnimations(){
+        if animatedKanji.count == 0{
+            dispatch_after(NSEC_PER_SEC, dispatch_get_main_queue(), { () -> Void in
+                self.loadAnimatedKanji()
+            })
+            return
+        }
+        
         for i in 1...8{
             startAnimation()
         }
@@ -67,8 +92,8 @@ class KanjiListViewController: UIViewController, UITableViewDataSource, UISearch
     }
     
     func startAnimation(){
-        var random = Int(arc4random_uniform(UInt32(tableData.count)))
-        let kanjiData = self.tableData[random]
+        var random = Int(arc4random_uniform(UInt32(animatedKanji.count)))
+        let kanjiData = self.animatedKanji[random]
         
         let label = UILabel()
         label.textColor = Colors.mainColor
@@ -104,7 +129,7 @@ class KanjiListViewController: UIViewController, UITableViewDataSource, UISearch
         }
     }
     
-    func pushDetails(kanjiData: KanjiData){
+    func pushDetails(kanjiData: Kanji){
         let detailsViewController = KanjiDetailsViewController(nibName: "KanjiDetailsViewController", bundle:nil)
         detailsViewController.kanjiData = kanjiData
         navigationController?.pushViewController(detailsViewController, animated: true)
@@ -114,9 +139,21 @@ class KanjiListViewController: UIViewController, UITableViewDataSource, UISearch
     func updateSearchResultsForSearchController(searchController: UISearchController){
         filteredTableData.removeAll(keepCapacity: false)
         if let searchString = searchController.searchBar.text where searchString != ""{
-            let searchPredicate = NSPredicate(format: "(kanji contains[c] %@) OR (yomi contains[c] %@) OR (romanji contains[c] %@) OR (any translations contains[c] %@)", searchString, searchString, searchString, searchString)
-            if let array = (tableData as NSArray).filteredArrayUsingPredicate(searchPredicate) as? [KanjiData]{
-                filteredTableData = array
+            
+            let entityDescription = NSEntityDescription.entityForName("Kanji", inManagedObjectContext: managedObjectContext!)
+            
+            let request = NSFetchRequest()
+            request.entity = entityDescription
+            
+            let pred = NSPredicate(format: "searchString contains[c] %@", searchString)
+            request.predicate = pred
+            
+            var error: NSError?
+            
+            var objects = managedObjectContext?.executeFetchRequest(request, error: &error)
+
+            if let kanjis = objects as? [Kanji]{
+                filteredTableData = kanjis
             }
         }
         self.tableView.reloadData()
@@ -139,16 +176,15 @@ class KanjiListViewController: UIViewController, UITableViewDataSource, UISearch
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell{
         let cell = tableView.dequeueReusableCellWithIdentifier(kanjiListCellIdentifier, forIndexPath: indexPath) as! KanjiListCell
         
-        var kanjiData:KanjiData
-        if (searchController.active) {
-            kanjiData = filteredTableData[indexPath.row]
-        }else{
-            kanjiData = tableData[indexPath.row]
-        }
+        var kanjiData:Kanji
+        kanjiData = filteredTableData[indexPath.row]
         
         cell.kanjiLabel.text = kanjiData.kanji
         cell.yomiLabel.text = kanjiData.yomi
-        cell.translationLabel.text = ", ".join(kanjiData.translations)
+        if let translations = kanjiData.translations as? [String]{
+            cell.translationLabel.text = ", ".join(translations)
+        }
+        
         
         return cell
     }
