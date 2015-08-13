@@ -16,7 +16,7 @@ protocol DataReaderDelegate: class{
 
 class DataReader: NSObject, NSXMLParserDelegate{
     
-    var delegate:DataReaderDelegate?
+    weak var delegate:DataReaderDelegate?
     
     static var kanjiIsLoaded:Bool{
         get{
